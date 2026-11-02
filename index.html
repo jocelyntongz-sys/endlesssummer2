@@ -483,7 +483,9 @@ if(qqSpaceBtn){
 document.getElementById('baiduForm').onsubmit=e=>{
   e.preventDefault();
   const q=document.getElementById('baiduQuery').value.trim();
-  if(q==='惠言中学侠客三人组'||q==='惠言中学侠客三人组吧'){
+  let noResults=document.getElementById('baiduNoResults');
+  if(noResults)noResults.hidden=true;
+  if(q==='惠言中学侠客三人组'||q==='惠言中学侠客三人组吧'||q==='侠客三人组'){
     window.open('./220f06a86858980a4a27d46c.html','_blank','noopener');
     return;
   }
@@ -491,7 +493,16 @@ document.getElementById('baiduForm').onsubmit=e=>{
     window.open('./bf23ad35be792ff4d27a8ca6.html','_blank','noopener');
     return;
   }
-  window.open(q?`https://www.baidu.com/s?wd=${encodeURIComponent(q)}`:'https://www.baidu.com','_blank');
+  // 未命中游戏关键词时留在游戏内，不访问真实搜索引擎。
+  if(!noResults){
+    noResults=document.createElement('div');
+    noResults.id='baiduNoResults';
+    noResults.setAttribute('role','status');
+    noResults.style.cssText='margin-top:28px;padding:24px 18px;border:1px solid #e8ebf0;border-radius:8px;background:#fafbfc;color:#666;font-size:14px;line-height:1.8;text-align:left';
+    document.getElementById('baiduForm').insertAdjacentElement('afterend',noResults);
+  }
+  noResults.textContent='未找到结果，请检查搜索词后重试。';
+  noResults.hidden=false;
 };
 
 function updateClock(){const now=new Date();document.getElementById('time').textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')}updateClock();setInterval(updateClock,30000);

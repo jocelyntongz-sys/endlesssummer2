@@ -185,8 +185,20 @@ const db=[
 {title:'摄影社“旧校园”主题影展开展',date:'2026-09-04',type:'社团活动',desc:'摄影社整理历届校园影像并举办主题展览。',keys:['摄影社','旧校园','社团','照片'],open:null}
 ];
 
-const sportsQueries=['2014年秋季田径运动会','2014年秋季运动会','2014年运动会'];
-const photoQueries=['2015年惠言中学校际摄影比赛','2015年摄影比赛','摄影比赛'];
+// 活动搜索需同时提供年份和活动名；忽略空格，兼容省略“年”。
+function getActivitySearch(raw){
+  const text=raw.normalize('NFKC').replace(/\s+/g,'');
+  const sports=text.includes('运动会');
+  const photo=text.includes('摄影');
+  if(!sports&&!photo)return null;
+  if(sports&&photo)return 'ambiguous';
+  const years=text.match(/\d+/g)||[];
+  if(!years.length)return 'missing-year';
+  if(years.length!==1)return 'not-found';
+  if(sports&&years[0]==='2014')return 'sports';
+  if(photo&&text.includes('比赛')&&years[0]==='2015')return 'photo';
+  return 'not-found';
+}
 const principalQueries=['校长','陈志强'];
 const home=document.getElementById('homeContent'),results=document.getElementById('searchResults'),input=document.getElementById('searchInput');
 
@@ -202,13 +214,26 @@ document.getElementById('siteSearch').addEventListener('submit',e=>{
   results.innerHTML=''; results.classList.add('show');
   if(!raw){results.innerHTML='<div class="empty">请输入搜索关键词。</div>';return;}
 
-  if(sportsQueries.includes(raw)){
+  const activity=getActivitySearch(raw);
+  if(activity==='missing-year'){
+    results.innerHTML='<div class="search-head">站内搜索结果（0）</div><div class="empty">请补充活动年份后搜索。</div>';
+    return;
+  }
+  if(activity==='ambiguous'){
+    results.innerHTML='<div class="search-head">站内搜索结果（0）</div><div class="empty">请每次搜索一项活动，并填写活动年份。</div>';
+    return;
+  }
+  if(activity==='not-found'){
+    results.innerHTML='<div class="search-head">站内搜索结果（0）</div><div class="empty">未找到结果，请检查活动年份及活动名称。</div>';
+    return;
+  }
+  if(activity==='sports'){
     results.innerHTML='<div class="search-head">站内搜索结果（1）</div><div class="result-item" id="sports2014Result"><div class="result-title">惠言中学2014年秋季田径运动会初中部比赛成绩</div><div class="result-meta">2014-11-08　校史档案 / 体育活动</div><div class="result-desc">2014年秋季田径运动会初中部各年级个人项目及团体接力比赛成绩。</div></div>';
     document.getElementById('sports2014Result').addEventListener('click',()=>window.location.href='./59abd41e8c47f8939406b0a9.html');
     return;
   }
 
-  if(photoQueries.includes(raw)){
+  if(activity==='photo'){
     results.innerHTML='<div class="search-head">站内搜索结果（1）</div><div class="result-item" id="photo2015Result"><div class="result-title">2015年惠言中学校际摄影比赛高中组获奖作品展示</div><div class="result-meta">2015-10-20　校园文化 / 摄影比赛</div><div class="result-desc">高中部高一、高二、高三年级优秀作品展示及作者创作说明。</div></div>';
     document.getElementById('photo2015Result').addEventListener('click',()=>window.location.href='./61a4387b63b313934160bb84.html');
     return;
